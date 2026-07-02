@@ -1,0 +1,1960 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ProgressPulse — Daily Tracker</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap");
+
+      :root {
+        --bg: #12141c;
+        --card: #1a1e2b;
+        --card-border: #2a2f42;
+        --text: #eeece4;
+        --muted: #8b90a3;
+        --amber: #e8a33d;
+        --teal: #4fb3a9;
+        --coral: #e1654f;
+        --violet: #9b8fe8;
+        --sage: #86b96a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Inter", system-ui, sans-serif;
+        padding: 20px 16px 60px;
+        min-height: 100vh;
+      }
+      .wrap {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      .hidden {
+        display: none !important;
+      }
+
+      /* ---------- onboarding ---------- */
+      #onboard {
+        position: fixed;
+        inset: 0;
+        background: var(--bg);
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .onboard-card {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 34px 28px;
+        max-width: 380px;
+        width: 100%;
+        text-align: center;
+      }
+      .onboard-card .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .onboard-card h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 24px;
+        margin: 0 0 6px;
+      }
+      .onboard-card p {
+        color: var(--muted);
+        font-size: 13.5px;
+        margin: 0 0 22px;
+      }
+      .onboard-card input {
+        margin-bottom: 12px;
+      }
+      .onboard-card .tbtn.primary {
+        width: 100%;
+        margin-top: 6px;
+      }
+      .onboard-err {
+        color: var(--coral);
+        font-size: 12.5px;
+        margin-top: 8px;
+        min-height: 16px;
+      }
+      .switch-link {
+        color: var(--muted);
+        font-size: 12px;
+        text-align: right;
+        margin-bottom: 14px;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+
+      /* ---------- header ---------- */
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        border-bottom: 1px solid var(--card-border);
+        padding-bottom: 20px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .header-left .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .header-left h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        font-size: 26px;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+      .header-left .date {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+      .gauge-wrap {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .gauge-label {
+        text-align: right;
+      }
+      .gauge-label .pct {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .gauge-label .sub {
+        font-size: 10.5px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      /* ---------- nav ---------- */
+      .nav {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        margin-bottom: 22px;
+        -webkit-overflow-scrolling: touch;
+      }
+      .nav::-webkit-scrollbar {
+        display: none;
+      }
+      .nav-btn {
+        background: transparent;
+        border: 1px solid var(--card-border);
+        color: var(--muted);
+        padding: 9px 16px;
+        border-radius: 20px;
+        font-family: "Inter", sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        transition: all 0.15s;
+        flex-shrink: 0;
+      }
+      .nav-btn .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+      .nav-btn.active {
+        color: var(--text);
+        border-color: transparent;
+        background: var(--card);
+      }
+      .nav-btn[data-tab="overview"].active .dot {
+        background: var(--amber);
+      }
+      .nav-btn[data-tab="habits"].active .dot {
+        background: var(--teal);
+      }
+      .nav-btn[data-tab="tasks"].active .dot {
+        background: var(--amber);
+      }
+      .nav-btn[data-tab="fitness"].active .dot {
+        background: var(--coral);
+      }
+      .nav-btn[data-tab="learning"].active .dot {
+        background: var(--violet);
+      }
+      .nav-btn[data-tab="goals"].active .dot {
+        background: var(--sage);
+      }
+      .nav-btn[data-tab="timer"].active .dot {
+        background: #f2c14e;
+      }
+      .nav-btn[data-tab="community"].active .dot {
+        background: #6fb1e8;
+      }
+
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+        animation: fadein 0.2s ease;
+      }
+      @keyframes fadein {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      @media (max-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+        margin-bottom: 16px;
+      }
+      .panel-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .tag {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        font-size: 13px;
+        color: #12141c;
+        flex-shrink: 0;
+      }
+      .panel-head h2 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 16px;
+        margin: 0;
+        flex: 1;
+      }
+      .panel-meta {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .habits .tag {
+        background: var(--teal);
+      }
+      .fitness .tag {
+        background: var(--coral);
+      }
+      .goals .tag {
+        background: var(--sage);
+      }
+      .learning .tag {
+        background: var(--violet);
+      }
+      .tasks .tag {
+        background: var(--amber);
+      }
+      .timer .tag {
+        background: #f2c14e;
+      }
+      .community .tag {
+        background: #6fb1e8;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--card-border);
+        font-size: 14.5px;
+      }
+      .row:last-child {
+        border-bottom: none;
+      }
+      .check {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 1.5px solid var(--muted);
+        flex-shrink: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
+      }
+      .check.on {
+        border-color: transparent;
+      }
+      .check svg {
+        width: 12px;
+        height: 12px;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      .check.on svg {
+        opacity: 1;
+      }
+      .habits .check.on {
+        background: var(--teal);
+      }
+      .tasks .check.on {
+        background: var(--amber);
+      }
+      .row-text {
+        flex: 1;
+      }
+      .row.done .row-text {
+        color: var(--muted);
+        text-decoration: line-through;
+      }
+      .row-del {
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        padding: 4px 6px;
+        opacity: 0.5;
+      }
+      .row-del:hover {
+        opacity: 1;
+        color: var(--coral);
+      }
+
+      .add-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      input[type="text"],
+      input[type="number"] {
+        background: #12141c;
+        border: 1px solid var(--card-border);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 14px;
+        font-family: inherit;
+        width: 100%;
+      }
+      input::placeholder {
+        color: #565c72;
+      }
+      button.add {
+        background: transparent;
+        border: 1px solid var(--card-border);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-size: 13.5px;
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: inherit;
+      }
+      button.add:hover {
+        border-color: var(--muted);
+      }
+      button.add:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      .goal-item {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--card-border);
+      }
+      .goal-item:last-child {
+        border-bottom: none;
+      }
+      .goal-top {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14.5px;
+        margin-bottom: 7px;
+      }
+      .goal-top .g-pct {
+        color: var(--sage);
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 600;
+      }
+      .bar-track {
+        height: 7px;
+        background: #12141c;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        background: var(--sage);
+        border-radius: 4px;
+        transition: width 0.2s;
+      }
+      .goal-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .goal-controls input[type="range"] {
+        flex: 1;
+        accent-color: var(--sage);
+      }
+
+      .log-entry {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--card-border);
+      }
+      .log-entry:last-child {
+        border-bottom: none;
+      }
+      .log-entry .l-meta {
+        color: var(--muted);
+      }
+      .two-col {
+        display: flex;
+        gap: 8px;
+      }
+      .two-col input {
+        flex: 1;
+      }
+      .two-col input.small {
+        max-width: 80px;
+        flex: none;
+      }
+
+      .empty {
+        color: var(--muted);
+        font-size: 13px;
+        padding: 8px 0;
+        font-style: italic;
+      }
+      .total-line {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed var(--card-border);
+        font-size: 12.5px;
+        color: var(--muted);
+        display: flex;
+        justify-content: space-between;
+      }
+      .total-line b {
+        color: var(--text);
+        font-family: "Space Grotesk", sans-serif;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      @media (max-width: 600px) {
+        .summary-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .sum-card {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+      }
+      .sum-card .sc-val {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .sum-card .sc-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-top: 4px;
+      }
+
+      .timer-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 10px 8px;
+      }
+      .timer-presets {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 22px;
+      }
+      .preset-btn {
+        background: transparent;
+        border: 1px solid var(--card-border);
+        color: var(--muted);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .preset-btn:hover,
+      .preset-btn.active {
+        border-color: #f2c14e;
+        color: var(--text);
+      }
+      .ring-wrap {
+        position: relative;
+        width: min(280px, 70vw);
+        height: min(280px, 70vw);
+        margin-bottom: 22px;
+      }
+      .ring-wrap svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+      .ring-time {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .ring-time .t-main {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 44px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .ring-time .t-label {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-top: 4px;
+      }
+      .timer-controls {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .tbtn {
+        border: none;
+        border-radius: 10px;
+        padding: 13px 28px;
+        font-size: 14.5px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: "Inter", sans-serif;
+      }
+      .tbtn.primary {
+        background: #f2c14e;
+        color: #12141c;
+      }
+      .tbtn.primary:hover {
+        background: #f6cd6b;
+      }
+      .tbtn.secondary {
+        background: transparent;
+        border: 1px solid var(--card-border);
+        color: var(--text);
+      }
+      .tbtn.secondary:hover {
+        border-color: var(--muted);
+      }
+      .timer-hint {
+        color: var(--muted);
+        font-size: 12.5px;
+        text-align: center;
+        max-width: 340px;
+        margin-top: 14px;
+      }
+      .timer-custom {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 6px;
+      }
+      .timer-custom input {
+        width: 80px;
+        text-align: center;
+      }
+
+      /* community */
+      .lb-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--card-border);
+      }
+      .lb-row:last-child {
+        border-bottom: none;
+      }
+      .lb-rank {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        color: var(--muted);
+        width: 22px;
+        flex-shrink: 0;
+      }
+      .lb-name {
+        flex: 1;
+      }
+      .lb-name .n {
+        font-size: 14.5px;
+      }
+      .lb-name .a {
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+      .lb-score {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        color: #6fb1e8;
+      }
+      .lb-row.me {
+        background: rgba(111, 177, 232, 0.08);
+        border-radius: 8px;
+        padding-left: 8px;
+        margin: 0 -8px;
+      }
+
+      footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 11.5px;
+        margin-top: 26px;
+      }
+      .install-hint {
+        background: var(--card);
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .install-hint b {
+        color: var(--text);
+      }
+      .top-strip {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 6px;
+      }
+      .top-strip .switch-link {
+        margin-bottom: 0;
+      }
+      .loading-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--amber);
+        animation: pulse 1s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ================= ONBOARDING ================= -->
+    <div id="onboard">
+      <div class="onboard-card">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 16px;
+          "
+        >
+          <div
+            style="
+              width: 38px;
+              height: 38px;
+              background: linear-gradient(135deg, #e8a33d, #e1654f);
+              border-radius: 10px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-family: &quot;Space Grotesk&quot;, sans-serif;
+              font-weight: 700;
+              font-size: 18px;
+              color: #12141c;
+            "
+          >
+            P
+          </div>
+          <span
+            style="
+              font-family: &quot;Space Grotesk&quot;, sans-serif;
+              font-size: 20px;
+              font-weight: 700;
+              letter-spacing: -0.01em;
+            "
+            >ProgressPulse</span
+          >
+        </div>
+        <div class="eyebrow">Welcome</div>
+        <h1>Let's set you up</h1>
+        <p>
+          Enter your name and age to get a personalized dashboard. Your progress
+          is saved and visible to everyone in the Community tab.
+        </p>
+        <input type="text" id="onName" placeholder="Your name" />
+        <input
+          type="number"
+          id="onAge"
+          placeholder="Your age"
+          min="1"
+          max="120"
+        />
+        <button class="tbtn primary" id="onBtn" onclick="submitOnboard()">
+          Start tracking
+        </button>
+        <div class="onboard-err" id="onErr"></div>
+      </div>
+    </div>
+
+    <!-- ================= APP ================= -->
+    <div class="wrap hidden" id="app">
+      <div class="top-strip">
+        <span class="switch-link" onclick="switchProfile()"
+          >Not you? Switch profile</span
+        >
+      </div>
+
+      <div class="header">
+        <div
+          class="header-left"
+          style="display: flex; align-items: center; gap: 14px"
+        >
+          <div
+            style="
+              width: 42px;
+              height: 42px;
+              background: linear-gradient(135deg, #e8a33d, #e1654f);
+              border-radius: 11px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-family: &quot;Space Grotesk&quot;, sans-serif;
+              font-weight: 700;
+              font-size: 20px;
+              color: #12141c;
+              flex-shrink: 0;
+            "
+          >
+            P
+          </div>
+          <div>
+            <div class="eyebrow" id="ageTag">Personal Log</div>
+            <h1 id="greetH1">Daily Progress</h1>
+            <div class="date" id="dateStr"></div>
+          </div>
+        </div>
+        <div class="gauge-wrap">
+          <svg width="66" height="66" viewBox="0 0 72 72">
+            <circle
+              cx="36"
+              cy="36"
+              r="30"
+              fill="none"
+              stroke="#2a2f42"
+              stroke-width="7"
+            />
+            <circle
+              id="gaugeCircle"
+              cx="36"
+              cy="36"
+              r="30"
+              fill="none"
+              stroke="var(--amber)"
+              stroke-width="7"
+              stroke-linecap="round"
+              stroke-dasharray="188.5"
+              stroke-dashoffset="188.5"
+              transform="rotate(-90 36 36)"
+            />
+          </svg>
+          <div class="gauge-label">
+            <div class="pct" id="gaugePct">0%</div>
+            <div class="sub">Day complete</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="install-hint">
+        📱💻
+        <span
+          ><b>Works everywhere</b> — open this same link on your phone or
+          computer. Everyone's name, age, and progress are saved to the shared
+          database, visible to all in the Community tab.</span
+        >
+      </div>
+
+      <div class="nav" id="nav">
+        <button class="nav-btn active" data-tab="overview">
+          <span class="dot"></span>Overview
+        </button>
+        <button class="nav-btn" data-tab="habits">
+          <span class="dot"></span>Habits
+        </button>
+        <button class="nav-btn" data-tab="tasks">
+          <span class="dot"></span>Tasks
+        </button>
+        <button class="nav-btn" data-tab="fitness">
+          <span class="dot"></span>Fitness
+        </button>
+        <button class="nav-btn" data-tab="learning">
+          <span class="dot"></span>Learning
+        </button>
+        <button class="nav-btn" data-tab="goals">
+          <span class="dot"></span>Goals
+        </button>
+        <button class="nav-btn" data-tab="timer">
+          <span class="dot"></span>Morning Timer
+        </button>
+        <button class="nav-btn" data-tab="community">
+          <span class="dot"></span>Community
+        </button>
+      </div>
+
+      <div class="page active" id="page-overview">
+        <div class="summary-grid">
+          <div class="sum-card">
+            <div class="sc-val" id="ovHabits" style="color: var(--teal)">
+              0/0
+            </div>
+            <div class="sc-label">Habits</div>
+          </div>
+          <div class="sum-card">
+            <div class="sc-val" id="ovTasks" style="color: var(--amber)">
+              0/0
+            </div>
+            <div class="sc-label">Tasks</div>
+          </div>
+          <div class="sum-card">
+            <div class="sc-val" id="ovFitness" style="color: var(--coral)">
+              0 min
+            </div>
+            <div class="sc-label">Fitness</div>
+          </div>
+          <div class="sum-card">
+            <div class="sc-val" id="ovLearning" style="color: var(--violet)">
+              0 min
+            </div>
+            <div class="sc-label">Learning</div>
+          </div>
+        </div>
+        <div class="panel goals">
+          <div class="panel-head">
+            <div class="tag">G</div>
+            <h2>Goals at a glance</h2>
+          </div>
+          <div id="ovGoalsList"></div>
+        </div>
+      </div>
+
+      <div class="page" id="page-habits">
+        <div class="panel habits">
+          <div class="panel-head">
+            <div class="tag">H</div>
+            <h2>Habits</h2>
+            <div class="panel-meta" id="habitsMeta">0/0</div>
+          </div>
+          <div id="habitsList"></div>
+          <div class="add-row">
+            <input
+              type="text"
+              id="habitInput"
+              placeholder="Add a habit, e.g. Drink water"
+            /><button class="add" onclick="addHabit()">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-tasks">
+        <div class="panel tasks">
+          <div class="panel-head">
+            <div class="tag">T</div>
+            <h2>Daily Tasks</h2>
+            <div class="panel-meta" id="tasksMeta">0/0</div>
+          </div>
+          <div id="tasksList"></div>
+          <div class="add-row">
+            <input type="text" id="taskInput" placeholder="Add a task" /><button
+              class="add"
+              onclick="addTask()"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-fitness">
+        <div class="panel fitness">
+          <div class="panel-head">
+            <div class="tag">F</div>
+            <h2>Fitness</h2>
+            <div class="panel-meta" id="fitnessMeta">0 sessions</div>
+          </div>
+          <div id="fitnessList"></div>
+          <div class="two-col" style="margin-top: 12px">
+            <input
+              type="text"
+              id="fitnessName"
+              placeholder="Workout, e.g. Run"
+            /><input
+              type="number"
+              id="fitnessMin"
+              class="small"
+              placeholder="min"
+            />
+          </div>
+          <div class="add-row">
+            <button class="add" style="width: 100%" onclick="addFitness()">
+              Log workout
+            </button>
+          </div>
+          <div class="total-line">
+            <span>Total time today</span><b id="fitnessTotal">0 min</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-learning">
+        <div class="panel learning">
+          <div class="panel-head">
+            <div class="tag">L</div>
+            <h2>Learning</h2>
+            <div class="panel-meta" id="learningMeta">0 sessions</div>
+          </div>
+          <div id="learningList"></div>
+          <div class="two-col" style="margin-top: 12px">
+            <input
+              type="text"
+              id="learningName"
+              placeholder="Topic, e.g. Spanish"
+            /><input
+              type="number"
+              id="learningMin"
+              class="small"
+              placeholder="min"
+            />
+          </div>
+          <div class="add-row">
+            <button class="add" style="width: 100%" onclick="addLearning()">
+              Log session
+            </button>
+          </div>
+          <div class="total-line">
+            <span>Total time today</span><b id="learningTotal">0 min</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-goals">
+        <div class="panel goals">
+          <div class="panel-head">
+            <div class="tag">G</div>
+            <h2>Goals</h2>
+            <div class="panel-meta" id="goalsMeta">0 goals</div>
+          </div>
+          <div id="goalsList"></div>
+          <div class="add-row">
+            <input
+              type="text"
+              id="goalInput"
+              placeholder="Add a goal, e.g. Finish portfolio site"
+            /><button class="add" onclick="addGoal()">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-timer">
+        <div class="panel timer">
+          <div class="panel-head">
+            <div class="tag">M</div>
+            <h2>Morning Timer</h2>
+            <div class="panel-meta" id="timerStateLabel">Ready</div>
+          </div>
+          <div class="timer-wrap">
+            <div class="timer-presets">
+              <button class="preset-btn" data-min="5">5 min</button>
+              <button class="preset-btn active" data-min="10">10 min</button>
+              <button class="preset-btn" data-min="15">15 min</button>
+              <button class="preset-btn" data-min="20">20 min</button>
+              <button class="preset-btn" data-min="30">30 min</button>
+            </div>
+            <div class="ring-wrap">
+              <svg viewBox="0 0 200 200">
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="88"
+                  fill="none"
+                  stroke="#2a2f42"
+                  stroke-width="12"
+                />
+                <circle
+                  id="timerRing"
+                  cx="100"
+                  cy="100"
+                  r="88"
+                  fill="none"
+                  stroke="#f2c14e"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                  stroke-dasharray="553"
+                  stroke-dashoffset="0"
+                />
+              </svg>
+              <div class="ring-time">
+                <div class="t-main" id="timerDisplay">10:00</div>
+                <div class="t-label" id="timerPhase">Morning routine</div>
+              </div>
+            </div>
+            <div class="timer-controls">
+              <button
+                class="tbtn primary"
+                id="timerStartBtn"
+                onclick="toggleTimer()"
+              >
+                Start</button
+              ><button class="tbtn secondary" onclick="resetTimer()">
+                Reset
+              </button>
+            </div>
+            <div class="timer-custom">
+              <input
+                type="number"
+                id="customMin"
+                placeholder="Custom min"
+              /><button class="add" onclick="setCustomTimer()">Set</button>
+            </div>
+            <div class="timer-hint">
+              Runs right in this tab — pick a length, hit Start, and you'll hear
+              a chime when it's done. Keep this tab open for the alarm to sound.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-community">
+        <div class="panel community">
+          <div class="panel-head">
+            <div class="tag">C</div>
+            <h2>Community</h2>
+            <div class="panel-meta">
+              <span class="switch-link" onclick="loadCommunity()">Refresh</span>
+            </div>
+          </div>
+          <div id="communityList"></div>
+        </div>
+      </div>
+
+      <footer>
+        ProgressPulse · Saved to a shared database — your name, age, and
+        progress are visible to everyone in the Community tab.
+      </footer>
+    </div>
+
+    <script>
+      // ================= SUPABASE CONFIG =================
+      const SUPABASE_URL = "https://xwctdlqbopwqxhvkzfxi.supabase.co";
+      const SUPABASE_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3Y3RkbHFib3B3cXhodmt6ZnhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5ODE0NzQsImV4cCI6MjA5ODU1NzQ3NH0.J8QkIQbIlRuvDiyS9H_J2lPhxXak2VLFQYnB8fh9WGE";
+
+      async function sb(path, opts = {}) {
+        const method = opts.method || "GET";
+        const headers = {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+        };
+        if (method === "POST") headers["Prefer"] = "return=representation";
+        if (method === "PATCH" || method === "DELETE")
+          headers["Prefer"] = "return=minimal";
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+          method,
+          headers,
+          body: opts.body ? JSON.stringify(opts.body) : undefined,
+        });
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error(t || res.statusText);
+        }
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
+      }
+
+      // ================= PROFILE / ONBOARDING =================
+      let me = null; // {id, name, age}
+      let habits = [],
+        tasks = [],
+        fitness = [],
+        learning = [],
+        goals = [];
+
+      const checkSvg =
+        '<svg viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="#12141c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      function el(html) {
+        const t = document.createElement("template");
+        t.innerHTML = html.trim();
+        return t.content.firstChild;
+      }
+
+      function ageLabel(age) {
+        if (age == null) return "Personal Log";
+        if (age < 13) return "Junior Log";
+        if (age < 20) return "Teen Log";
+        if (age < 36) return "Rise & Grind";
+        if (age < 56) return "Balanced Day";
+        return "Steady Progress";
+      }
+      function defaultsForAge(age) {
+        if (age == null)
+          return { habits: ["Drink 2L water", "Stretch 10 min"], timer: 10 };
+        if (age < 13)
+          return {
+            habits: ["Brush teeth", "Read 10 pages", "Tidy room"],
+            timer: 5,
+          };
+        if (age < 20)
+          return {
+            habits: ["Homework check", "Drink water", "Stretch"],
+            timer: 10,
+          };
+        if (age < 36)
+          return {
+            habits: ["Drink 2L water", "Workout", "Read 10 pages"],
+            timer: 15,
+          };
+        if (age < 56)
+          return {
+            habits: ["Stretch", "Plan the day", "Drink water"],
+            timer: 10,
+          };
+        return {
+          habits: ["Morning walk", "Stretch", "Take vitamins"],
+          timer: 15,
+        };
+      }
+
+      async function submitOnboard() {
+        const name = document.getElementById("onName").value.trim();
+        const age = Number(document.getElementById("onAge").value);
+        const errEl = document.getElementById("onErr");
+        const btn = document.getElementById("onBtn");
+        if (!name) {
+          errEl.textContent = "Please enter your name.";
+          return;
+        }
+        if (!age || age < 1 || age > 120) {
+          errEl.textContent = "Please enter a valid age.";
+          return;
+        }
+        errEl.textContent = "";
+        btn.disabled = true;
+        btn.textContent = "Saving...";
+        try {
+          let rows;
+          try {
+            rows = await sb("profiles", {
+              method: "POST",
+              body: [{ name, age }],
+            });
+          } catch (e) {
+            // If DB unavailable, fall back to localStorage-only mode
+            const fakeId = "local_" + Date.now();
+            me = { id: fakeId, name, age };
+            localStorage.setItem("dp_profile_id", fakeId);
+            localStorage.setItem("dp_profile_local", JSON.stringify(me));
+            const defs = defaultsForAge(age);
+            habits = defs.habits.map((h, i) => ({
+              id: "lh" + i,
+              profile_id: fakeId,
+              category: "habit",
+              name: h,
+              done: false,
+            }));
+            tasks = [];
+            fitness = [];
+            learning = [];
+            goals = [];
+            saveLocal();
+            setTimerLength(defs.timer, true);
+            await bootApp();
+            return;
+          }
+          const profile = rows[0];
+          localStorage.setItem("dp_profile_id", profile.id);
+          me = profile;
+          const defs = defaultsForAge(age);
+          for (const h of defs.habits) {
+            await sb("items", {
+              method: "POST",
+              body: [
+                { profile_id: me.id, category: "habit", name: h, done: false },
+              ],
+            });
+          }
+          setTimerLength(defs.timer, true);
+          await bootApp();
+        } catch (e) {
+          errEl.textContent = "Could not save: " + e.message;
+          btn.disabled = false;
+          btn.textContent = "Start tracking";
+        }
+      }
+      function switchProfile() {
+        localStorage.removeItem("dp_profile_id");
+        location.reload();
+      }
+
+      function saveLocal() {
+        localStorage.setItem(
+          "dp_local_data",
+          JSON.stringify({ habits, tasks, fitness, learning, goals }),
+        );
+      }
+      function loadLocal() {
+        const d = localStorage.getItem("dp_local_data");
+        if (!d) return;
+        const p = JSON.parse(d);
+        habits = p.habits || [];
+        tasks = p.tasks || [];
+        fitness = p.fitness || [];
+        learning = p.learning || [];
+        goals = p.goals || [];
+      }
+      function isLocal() {
+        return me && String(me.id).startsWith("local_");
+      }
+
+      async function tryResumeProfile() {
+        const id = localStorage.getItem("dp_profile_id");
+        if (!id) return false;
+        if (String(id).startsWith("local_")) {
+          const local = localStorage.getItem("dp_profile_local");
+          if (!local) return false;
+          me = JSON.parse(local);
+          loadLocal();
+          return true;
+        }
+        try {
+          const rows = await sb(`profiles?id=eq.${id}&select=*`);
+          if (rows && rows.length) {
+            me = rows[0];
+            return true;
+          }
+        } catch (e) {}
+        return false;
+      }
+
+      async function bootApp() {
+        document.getElementById("onboard").classList.add("hidden");
+        document.getElementById("app").classList.remove("hidden");
+        document.getElementById("greetH1").textContent = `Hey, ${me.name}`;
+        document.getElementById("ageTag").textContent = ageLabel(me.age);
+        document.getElementById("dateStr").textContent =
+          new Date().toLocaleDateString(undefined, {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }) + ` · Age ${me.age}`;
+        await loadMyItems();
+        updateTimerDisplay();
+      }
+
+      async function loadMyItems() {
+        if (isLocal()) {
+          renderHabits();
+          renderTasks();
+          renderFitness();
+          renderLearning();
+          renderGoals();
+          updateGauge();
+          return;
+        }
+        const rows = await sb(
+          `items?profile_id=eq.${me.id}&select=*&order=created_at.asc`,
+        );
+        habits = rows.filter((r) => r.category === "habit");
+        tasks = rows.filter((r) => r.category === "task");
+        fitness = rows.filter((r) => r.category === "fitness");
+        learning = rows.filter((r) => r.category === "learning");
+        goals = rows.filter((r) => r.category === "goal");
+        renderHabits();
+        renderTasks();
+        renderFitness();
+        renderLearning();
+        renderGoals();
+        updateGauge();
+      }
+
+      // ================= NAV =================
+      document.getElementById("nav").addEventListener("click", (e) => {
+        const btn = e.target.closest(".nav-btn");
+        if (!btn) return;
+        document
+          .querySelectorAll(".nav-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const tab = btn.dataset.tab;
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => p.classList.remove("active"));
+        document.getElementById("page-" + tab).classList.add("active");
+        if (tab === "community") loadCommunity();
+      });
+
+      // ================= HABITS =================
+      function renderHabits() {
+        const list = document.getElementById("habitsList");
+        list.innerHTML = "";
+        if (!habits.length) {
+          list.appendChild(
+            el('<div class="empty">No habits yet — add one below.</div>'),
+          );
+        }
+        habits.forEach((h) => {
+          const row = el(
+            `<div class="row ${h.done ? "done" : ""}"><div class="check ${h.done ? "on" : ""}">${checkSvg}</div><div class="row-text">${h.name}</div><div class="row-del">×</div></div>`,
+          );
+          row.querySelector(".check").onclick = async () => {
+            h.done = !h.done;
+            renderHabits();
+            updateGauge();
+            if (isLocal()) {
+              saveLocal();
+              return;
+            }
+            await sb(`items?id=eq.${h.id}`, {
+              method: "PATCH",
+              body: { done: h.done },
+              prefer: "return=minimal",
+            });
+          };
+          row.querySelector(".row-del").onclick = async () => {
+            habits = habits.filter((x) => x.id !== h.id);
+            renderHabits();
+            updateGauge();
+            if (isLocal()) {
+              saveLocal();
+              return;
+            }
+            await sb(`items?id=eq.${h.id}`, {
+              method: "DELETE",
+              prefer: "return=minimal",
+            });
+          };
+          list.appendChild(row);
+        });
+        const done = habits.filter((h) => h.done).length;
+        document.getElementById("habitsMeta").textContent =
+          `${done}/${habits.length}`;
+        document.getElementById("ovHabits").textContent =
+          `${done}/${habits.length}`;
+      }
+      async function addHabit() {
+        const inp = document.getElementById("habitInput");
+        const v = inp.value.trim();
+        if (!v) return;
+        inp.value = "";
+        if (isLocal()) {
+          habits.push({
+            id: "lh" + Date.now(),
+            profile_id: me.id,
+            category: "habit",
+            name: v,
+            done: false,
+          });
+          saveLocal();
+          renderHabits();
+          updateGauge();
+          return;
+        }
+        const rows = await sb("items", {
+          method: "POST",
+          body: [
+            { profile_id: me.id, category: "habit", name: v, done: false },
+          ],
+        });
+        habits.push(rows[0]);
+        renderHabits();
+        updateGauge();
+      }
+
+      // ================= TASKS =================
+      function renderTasks() {
+        const list = document.getElementById("tasksList");
+        list.innerHTML = "";
+        if (!tasks.length) {
+          list.appendChild(
+            el('<div class="empty">No tasks yet — add one below.</div>'),
+          );
+        }
+        tasks.forEach((t) => {
+          const row = el(
+            `<div class="row ${t.done ? "done" : ""}"><div class="check ${t.done ? "on" : ""}">${checkSvg}</div><div class="row-text">${t.name}</div><div class="row-del">×</div></div>`,
+          );
+          row.querySelector(".check").onclick = async () => {
+            t.done = !t.done;
+            renderTasks();
+            updateGauge();
+            if (isLocal()) {
+              saveLocal();
+              return;
+            }
+            await sb(`items?id=eq.${t.id}`, {
+              method: "PATCH",
+              body: { done: t.done },
+              prefer: "return=minimal",
+            });
+          };
+          row.querySelector(".row-del").onclick = async () => {
+            tasks = tasks.filter((x) => x.id !== t.id);
+            renderTasks();
+            updateGauge();
+            if (isLocal()) {
+              saveLocal();
+              return;
+            }
+            await sb(`items?id=eq.${t.id}`, {
+              method: "DELETE",
+              prefer: "return=minimal",
+            });
+          };
+          list.appendChild(row);
+        });
+        const done = tasks.filter((t) => t.done).length;
+        document.getElementById("tasksMeta").textContent =
+          `${done}/${tasks.length}`;
+        document.getElementById("ovTasks").textContent =
+          `${done}/${tasks.length}`;
+      }
+      async function addTask() {
+        const inp = document.getElementById("taskInput");
+        const v = inp.value.trim();
+        if (!v) return;
+        inp.value = "";
+        if (isLocal()) {
+          tasks.push({
+            id: "lt" + Date.now(),
+            profile_id: me.id,
+            category: "task",
+            name: v,
+            done: false,
+          });
+          saveLocal();
+          renderTasks();
+          updateGauge();
+          return;
+        }
+        const rows = await sb("items", {
+          method: "POST",
+          body: [{ profile_id: me.id, category: "task", name: v, done: false }],
+        });
+        tasks.push(rows[0]);
+        renderTasks();
+        updateGauge();
+      }
+
+      // ================= FITNESS =================
+      function renderFitness() {
+        const list = document.getElementById("fitnessList");
+        list.innerHTML = "";
+        if (!fitness.length) {
+          list.appendChild(
+            el('<div class="empty">Nothing logged yet today.</div>'),
+          );
+        }
+        fitness.forEach((f) => {
+          const row = el(
+            `<div class="log-entry"><span class="l-name">${f.name}</span><span class="l-meta">${f.minutes} min <span class="row-del" style="margin-left:6px;">×</span></span></div>`,
+          );
+          row.querySelector(".row-del").onclick = async () => {
+            fitness = fitness.filter((x) => x.id !== f.id);
+            renderFitness();
+            updateGauge();
+            if (isLocal()) {
+              saveLocal();
+              return;
+            }
+            await sb(`items?id=eq.${f.id}`, {
+              method: "DELETE",
+              prefer: "return=minimal",
+            });
+          };
+          list.appendChild(row);
+        });
+        const total = fitness.reduce((s, f) => s + Number(f.minutes || 0), 0);
+        document.getElementById("fitnessMeta").textContent =
+          `${fitness.length} session${fitness.length === 1 ? "" : "s"}`;
+        document.getElementById("fitnessTotal").textContent = `${total} min`;
+        document.getElementById("ovFitness").textContent = `${total} min`;
+      }
+      async function addFitness() {
+        const nameInp = document.getElementById("fitnessName"),
+          minInp = document.getElementById("fitnessMin");
+        const name = nameInp.value.trim(),
+          min = Number(minInp.value) || 0;
+        if (!name) return;
+        nameInp.value = "";
+        minInp.value = "";
+        if (isLocal()) {
+          fitness.push({
+            id: "lf" + Date.now(),
+            profile_id: me.id,
+            category: "fitness",
+            name,
+            minutes: min,
+          });
+          saveLocal();
+          renderFitness();
+          updateGauge();
+          return;
+        }
+        const rows = await sb("items", {
+          method: "POST",
+          body: [
+            { profile_id: me.id, category: "fitness", name, minutes: min },
+          ],
+        });
+        fitness.push(rows[0]);
+        renderFitness();
+        updateGauge();
+      }
+
+      // ================= LEARNING =================
+      function renderLearning() {
+        const list = document.getElementById("learningList");
+        list.innerHTML = "";
+        if (!learning.length) {
+          list.appendChild(
+            el('<div class="empty">Nothing logged yet today.</div>'),
+          );
+        }
+        learning.forEach((f) => {
+          const row = el(
+            `<div class="log-entry"><span class="l-name">${f.name}</span><span class="l-meta">${f.minutes} min <span class="row-del" style="margin-left:6px;">×</span></span></div>`,
+          );
+          row.querySelector(".row-del").onclick = async () => {
+            learning = learning.filter((x) => x.id !== f.id);
+            renderLearning();
+            updateGauge();
+            if (isLocal()) {
+              saveLocal();
+              return;
+            }
+            await sb(`items?id=eq.${f.id}`, {
+              method: "DELETE",
+              prefer: "return=minimal",
+            });
+          };
+          list.appendChild(row);
+        });
+        const total = learning.reduce((s, f) => s + Number(f.minutes || 0), 0);
+        document.getElementById("learningMeta").textContent =
+          `${learning.length} session${learning.length === 1 ? "" : "s"}`;
+        document.getElementById("learningTotal").textContent = `${total} min`;
+        document.getElementById("ovLearning").textContent = `${total} min`;
+      }
+      async function addLearning() {
+        const nameInp = document.getElementById("learningName"),
+          minInp = document.getElementById("learningMin");
+        const name = nameInp.value.trim(),
+          min = Number(minInp.value) || 0;
+        if (!name) return;
+        nameInp.value = "";
+        minInp.value = "";
+        if (isLocal()) {
+          learning.push({
+            id: "ll" + Date.now(),
+            profile_id: me.id,
+            category: "learning",
+            name,
+            minutes: min,
+          });
+          saveLocal();
+          renderLearning();
+          updateGauge();
+          return;
+        }
+        const rows = await sb("items", {
+          method: "POST",
+          body: [
+            { profile_id: me.id, category: "learning", name, minutes: min },
+          ],
+        });
+        learning.push(rows[0]);
+        renderLearning();
+        updateGauge();
+      }
+
+      // ================= GOALS =================
+      function renderGoals() {
+        const list = document.getElementById("goalsList");
+        const ovList = document.getElementById("ovGoalsList");
+        list.innerHTML = "";
+        ovList.innerHTML = "";
+        if (!goals.length) {
+          list.appendChild(
+            el('<div class="empty">No goals yet — add one below.</div>'),
+          );
+          ovList.appendChild(el('<div class="empty">No goals yet.</div>'));
+        }
+        goals.forEach((g) => {
+          const item = el(
+            `<div class="goal-item"><div class="goal-top"><span>${g.name} <span class="row-del" style="margin-left:4px;">×</span></span><span class="g-pct">${g.pct}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${g.pct}%"></div></div><div class="goal-controls"><input type="range" min="0" max="100" value="${g.pct}"></div></div>`,
+          );
+          item.querySelector(".row-del").onclick = async () => {
+            goals = goals.filter((x) => x.id !== g.id);
+            renderGoals();
+            updateGauge();
+            if (isLocal()) {
+              saveLocal();
+              return;
+            }
+            await sb(`items?id=eq.${g.id}`, {
+              method: "DELETE",
+              prefer: "return=minimal",
+            });
+          };
+          item.querySelector("input[type=range]").oninput = async (e) => {
+            g.pct = Number(e.target.value);
+            renderGoals();
+            updateGauge();
+            if (isLocal()) {
+              saveLocal();
+              return;
+            }
+            await sb(`items?id=eq.${g.id}`, {
+              method: "PATCH",
+              body: { pct: g.pct },
+              prefer: "return=minimal",
+            });
+          };
+          list.appendChild(item);
+          ovList.appendChild(
+            el(
+              `<div class="goal-item"><div class="goal-top"><span>${g.name}</span><span class="g-pct">${g.pct}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${g.pct}%"></div></div></div>`,
+            ),
+          );
+        });
+        document.getElementById("goalsMeta").textContent =
+          `${goals.length} goal${goals.length === 1 ? "" : "s"}`;
+      }
+      async function addGoal() {
+        const inp = document.getElementById("goalInput");
+        const v = inp.value.trim();
+        if (!v) return;
+        inp.value = "";
+        if (isLocal()) {
+          goals.push({
+            id: "lg" + Date.now(),
+            profile_id: me.id,
+            category: "goal",
+            name: v,
+            pct: 0,
+          });
+          saveLocal();
+          renderGoals();
+          updateGauge();
+          return;
+        }
+        const rows = await sb("items", {
+          method: "POST",
+          body: [{ profile_id: me.id, category: "goal", name: v, pct: 0 }],
+        });
+        goals.push(rows[0]);
+        renderGoals();
+        updateGauge();
+      }
+
+      // ================= GAUGE =================
+      function updateGauge() {
+        const parts = [];
+        if (habits.length)
+          parts.push(habits.filter((h) => h.done).length / habits.length);
+        if (tasks.length)
+          parts.push(tasks.filter((t) => t.done).length / tasks.length);
+        parts.push(fitness.length ? 1 : 0);
+        parts.push(learning.length ? 1 : 0);
+        if (goals.length)
+          parts.push(
+            goals.reduce((s, g) => s + g.pct, 0) / (goals.length * 100),
+          );
+        const avg = parts.length
+          ? parts.reduce((a, b) => a + b, 0) / parts.length
+          : 0;
+        const pct = Math.round(avg * 100);
+        const circumference = 188.5;
+        document.getElementById("gaugeCircle").style.strokeDashoffset =
+          circumference - avg * circumference;
+        document.getElementById("gaugePct").textContent = pct + "%";
+        const circle = document.getElementById("gaugeCircle");
+        circle.style.stroke =
+          pct >= 80
+            ? "var(--sage)"
+            : pct >= 40
+              ? "var(--amber)"
+              : "var(--coral)";
+        return avg;
+      }
+
+      // enter-to-add
+      [
+        ["habitInput", addHabit],
+        ["taskInput", addTask],
+        ["goalInput", addGoal],
+      ].forEach(([id, fn]) => {
+        document.getElementById(id).addEventListener("keydown", (e) => {
+          if (e.key === "Enter") fn();
+        });
+      });
+      ["fitnessName", "fitnessMin"].forEach((id) =>
+        document.getElementById(id).addEventListener("keydown", (e) => {
+          if (e.key === "Enter") addFitness();
+        }),
+      );
+      ["learningName", "learningMin"].forEach((id) =>
+        document.getElementById(id).addEventListener("keydown", (e) => {
+          if (e.key === "Enter") addLearning();
+        }),
+      );
+
+      // ================= COMMUNITY =================
+      async function loadCommunity() {
+        const list = document.getElementById("communityList");
+        list.innerHTML = `<div class="empty"><span class="loading-dot"></span> Loading everyone's progress...</div>`;
+        try {
+          const [profiles, items] = await Promise.all([
+            sb("profiles?select=*"),
+            sb("items?select=*"),
+          ]);
+          const byProfile = {};
+          items.forEach((it) => {
+            (byProfile[it.profile_id] = byProfile[it.profile_id] || []).push(
+              it,
+            );
+          });
+          const scored = profiles
+            .map((p) => {
+              const its = byProfile[p.id] || [];
+              const h = its.filter((i) => i.category === "habit"),
+                t = its.filter((i) => i.category === "task");
+              const f = its.filter((i) => i.category === "fitness"),
+                l = its.filter((i) => i.category === "learning");
+              const g = its.filter((i) => i.category === "goal");
+              const parts = [];
+              if (h.length)
+                parts.push(h.filter((x) => x.done).length / h.length);
+              if (t.length)
+                parts.push(t.filter((x) => x.done).length / t.length);
+              parts.push(f.length ? 1 : 0);
+              parts.push(l.length ? 1 : 0);
+              if (g.length)
+                parts.push(
+                  g.reduce((s, x) => s + (x.pct || 0), 0) / (g.length * 100),
+                );
+              const score = parts.length
+                ? Math.round(
+                    (parts.reduce((a, b) => a + b, 0) / parts.length) * 100,
+                  )
+                : 0;
+              return { ...p, score };
+            })
+            .sort((a, b) => b.score - a.score);
+
+          list.innerHTML = "";
+          if (!scored.length) {
+            list.appendChild(
+              el('<div class="empty">No one has joined yet.</div>'),
+            );
+            return;
+          }
+          scored.forEach((p, i) => {
+            const row = el(
+              `<div class="lb-row ${p.id === me.id ? "me" : ""}"><div class="lb-rank">#${i + 1}</div><div class="lb-name"><div class="n">${p.name}${p.id === me.id ? " (you)" : ""}</div><div class="a">Age ${p.age} · ${ageLabel(p.age)}</div></div><div class="lb-score">${p.score}%</div></div>`,
+            );
+            list.appendChild(row);
+          });
+        } catch (e) {
+          list.innerHTML = `<div class="empty">Could not load community data. (${e.message})</div>`;
+        }
+      }
+
+      // ================= MORNING TIMER =================
+      let totalSeconds = 10 * 60,
+        remaining = totalSeconds,
+        timerInterval = null,
+        running = false;
+      const RING_CIRC = 553;
+      function formatTime(s) {
+        const m = Math.floor(s / 60),
+          sec = s % 60;
+        return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+      }
+      function updateTimerDisplay() {
+        document.getElementById("timerDisplay").textContent =
+          formatTime(remaining);
+        document.getElementById("timerRing").style.strokeDashoffset =
+          RING_CIRC * (1 - remaining / totalSeconds);
+      }
+      function playChime() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const now = ctx.currentTime;
+          [880, 1320, 1760].forEach((freq, i) => {
+            const osc = ctx.createOscillator(),
+              gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            const start = now + i * 0.28;
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(0.25, start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.9);
+            osc.start(start);
+            osc.stop(start + 0.95);
+          });
+        } catch (e) {}
+      }
+      function toggleTimer() {
+        running ? pauseTimer() : startTimer();
+      }
+      function startTimer() {
+        if (remaining <= 0) return;
+        running = true;
+        document.getElementById("timerStartBtn").textContent = "Pause";
+        document.getElementById("timerStateLabel").textContent = "Running";
+        timerInterval = setInterval(() => {
+          remaining--;
+          updateTimerDisplay();
+          if (remaining <= 0) {
+            clearInterval(timerInterval);
+            running = false;
+            document.getElementById("timerStartBtn").textContent = "Start";
+            document.getElementById("timerStateLabel").textContent = "Done!";
+            document.getElementById("timerPhase").textContent = "Time's up ☀️";
+            playChime();
+          }
+        }, 1000);
+      }
+      function pauseTimer() {
+        running = false;
+        clearInterval(timerInterval);
+        document.getElementById("timerStartBtn").textContent = "Resume";
+        document.getElementById("timerStateLabel").textContent = "Paused";
+      }
+      function resetTimer() {
+        clearInterval(timerInterval);
+        running = false;
+        remaining = totalSeconds;
+        document.getElementById("timerStartBtn").textContent = "Start";
+        document.getElementById("timerStateLabel").textContent = "Ready";
+        document.getElementById("timerPhase").textContent = "Morning routine";
+        updateTimerDisplay();
+      }
+      function setTimerLength(min, silent) {
+        totalSeconds = min * 60;
+        remaining = totalSeconds;
+        if (!silent) resetTimer();
+        else updateTimerDisplay();
+      }
+      document.querySelectorAll(".preset-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".preset-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          setTimerLength(Number(btn.dataset.min));
+        });
+      });
+      function setCustomTimer() {
+        const v = Number(document.getElementById("customMin").value);
+        if (!v || v <= 0) return;
+        document
+          .querySelectorAll(".preset-btn")
+          .forEach((b) => b.classList.remove("active"));
+        setTimerLength(v);
+      }
+
+      // ================= INIT =================
+      (async function init() {
+        const resumed = await tryResumeProfile();
+        if (resumed) {
+          await bootApp();
+        }
+      })();
+    </script>
+  </body>
+</html>
